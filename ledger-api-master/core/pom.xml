@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>core</artifactId>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>21</source>
+          <target>21</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+
+      <!-- Jandex plugin to create index for Quarkus -->
+      <plugin>
+        <artifactId>jandex-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
+            <id>make-index</id>
+          </execution>
+        </executions>
+        <groupId>io.smallrye</groupId>
+        <version>3.1.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- Quarkus Extensions -->
+    <dependency>
+      <artifactId>quarkus-arc</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-resteasy-reactive</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-hibernate-orm-panache</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-hibernate-validator</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-security</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-oidc</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <!-- Test Dependencies -->
+    <dependency>
+      <artifactId>quarkus-junit5</artifactId>
+      <groupId>io.quarkus</groupId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <description>Code Foundation Module - Common utilities and shared components</description>
+  <groupId>com.ledgerx</groupId>
+  <modelVersion>4.0.0</modelVersion>
+  <name>Code Foundation</name>
+  <packaging>jar</packaging>
+
+  <parent>
+    <artifactId>leger-api</artifactId>
+    <groupId>com.ledgerx</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+  <version>1.0.0-SNAPSHOT</version>
+</project>

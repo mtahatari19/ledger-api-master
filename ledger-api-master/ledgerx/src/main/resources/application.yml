@@ -1,0 +1,69 @@
+quarkus:
+  application:
+    name: ledgerx
+    version: 1.0.0-SNAPSHOT
+
+  native:
+    additional-build-args: -Dnet.bytebuddy.experimental=true
+
+
+  datasource:
+    db-kind: h2
+    jdbc:
+      url: jdbc:h2:mem:ledgerx;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password: ""
+
+  hibernate-orm:
+    database:
+      generation: create-drop
+    packages: com.ledgerx,com.ledger.core
+    log:
+      sql: true
+      format-sql: true
+
+  # liquibase:
+  #   change-log: db/changelog/db.changelog-master.xml
+  #   default-schema: PUBLIC
+  #   migrate-at-start: true
+
+  oidc:
+    auth-server-url: http://localhost:8080/realms/ledgerx
+    client-id: ledgerx-client
+    credentials:
+      secret: your-client-secret
+
+  http:
+    port: 8081
+    root-path: /api/v1
+
+  swagger-ui:
+    path: /swagger-ui
+    always-include: true
+
+  smallrye-openapi:
+    path: /api-docs
+
+  log:
+    level:
+      "io.quarkus.security": DEBUG
+      "org.hibernate.SQL": DEBUG
+      "org.hibernate.type.descriptor.sql.BasicBinder": TRACE
+
+  devservices:
+    enabled: true
+
+  index-dependency:
+    core:
+      group-id: com.ledgerx
+      artifact-id: core
+
+app:
+  security:
+    jwt:
+      authorities-claim-name: realm_access.roles
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:8080
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true

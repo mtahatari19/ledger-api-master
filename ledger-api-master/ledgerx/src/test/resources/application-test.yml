@@ -1,0 +1,51 @@
+spring:
+  profiles:
+    active: test
+
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:XE
+    username: ledgerx_test
+    password: ledgerx_test
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: LEDGERX_TEST
+    drop-first: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/ledgerx-test
+          jwk-set-uri: http://localhost:8080/realms/ledgerx-test/protocol/openid-connect/certs
+
+logging:
+  level:
+    org.springframework.security: INFO
+    liquibase: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+    org.testcontainers: INFO
+
+# Server Configuration for tests
+server:
+  port: 0  # Random available port
+
+# Test specific properties
+app:
+  security:
+    jwt:
+      authorities-claim-name: realm_access.roles
+  test:
+    use-testcontainers: false  # Set to true to use Testcontainers Oracle XE

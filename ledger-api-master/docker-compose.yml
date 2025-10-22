@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  oracle:
+    image: gvenzl/oracle-free:23.4-faststart
+    platform: linux/amd64
+    container_name: ledgerx-oracle
+    restart: unless-stopped
+    environment:
+      - ORACLE_PASSWORD=OraclePass123!
+      - APP_USER=app
+      - APP_USER_PASSWORD=AppPass123!
+    ports:
+      - "1521:1521"
+    healthcheck:
+      test: [ "CMD-SHELL", "echo 'select 1 from dual;' | sqlplus -s / as sysdba >/dev/null 2>&1 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+
+  ledgerx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ledgerx-app
+    restart: unless-stopped
+    depends_on:
+      - oracle
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle:1521/FREEPDB1
+      - SPRING_DATASOURCE_USERNAME=app
+      - SPRING_DATASOURCE_PASSWORD=AppPass123!
+      - SPRING_JPA_DATABASE-PLATFORM=org.hibernate.dialect.OracleDialect
+      - SPRING_LIQUIBASE_DEFAULT-SCHEMA=APP
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    ports:
+      - "8081:8081"
+    command: [ "sh", "-c", "java $JAVA_OPTS -jar /app/app.jar" ]
+
+volumes:
+  oracle-data:

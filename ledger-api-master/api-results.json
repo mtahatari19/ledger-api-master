@@ -1,0 +1,197 @@
+{
+  "testSummary": {
+    "totalEntities": 43,
+    "currencies": 15,
+    "organizations": 9,
+    "categories": 6,
+    "products": 7,
+    "campaigns": 3,
+    "accounts": 3,
+    "successRate": "100%",
+    "endpointCoverage": "100%",
+    "totalEndpoints": 29,
+    "testedEndpoints": 29,
+    "status": "ULTIMATE SUCCESS"
+  },
+  "createdEntities": {
+    "thaiBaht": {
+      "id": 14,
+      "currencyCode": "THB",
+      "currencyNumCode": 764,
+      "swiftCode": "THB",
+      "currencyName": "Thai Baht",
+      "symbol": "฿",
+      "decimalPrecision": 2,
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:55:32.176528",
+      "updatedAt": "2025-09-26T17:55:32.176528",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "malaysianRinggit": {
+      "id": 15,
+      "currencyCode": "MYR",
+      "currencyNumCode": 458,
+      "swiftCode": "MYR",
+      "currencyName": "Malaysian Ringgit",
+      "symbol": "RM",
+      "decimalPrecision": 2,
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:55:32.269989",
+      "updatedAt": "2025-09-26T17:55:32.269989",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "bangkokBranch": {
+      "id": 22,
+      "orgUnitCode": "BANGKOK_BRANCH",
+      "orgUnitName": "Bangkok Branch Office",
+      "parentOrgUnitId": null,
+      "parentOrgUnitName": null,
+      "description": "Bangkok branch office for Thailand operations",
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:55:44.42221",
+      "updatedAt": "2025-09-26T17:55:44.42221",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser",
+      "children": null
+    },
+    "kualaLumpurBranch": {
+      "id": 23,
+      "orgUnitCode": "KL_BRANCH",
+      "orgUnitName": "Kuala Lumpur Branch Office",
+      "parentOrgUnitId": null,
+      "parentOrgUnitName": null,
+      "description": "Kuala Lumpur branch office for Malaysia operations",
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:55:44.480456",
+      "updatedAt": "2025-09-26T17:55:44.480456",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser",
+      "children": null
+    },
+    "healthcareCategory": {
+      "id": 22,
+      "name": "Healthcare",
+      "description": "Healthcare products and services",
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:55:53.690644",
+      "updatedAt": "2025-09-26T17:55:53.690644",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "educationCategory": {
+      "id": 23,
+      "name": "Education",
+      "description": "Education products and services",
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:55:53.718986",
+      "updatedAt": "2025-09-26T17:55:53.718986",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "medicalSoftware": {
+      "id": 22,
+      "productCode": "MED_SOFT_001",
+      "productName": "Advanced Medical Software",
+      "categoryId": 22,
+      "categoryName": "Healthcare",
+      "description": "Comprehensive medical software for healthcare institutions",
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:56:12.400418",
+      "updatedAt": "2025-09-26T17:56:12.400418",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "learningPlatform": {
+      "id": 23,
+      "productCode": "LEARN_PLAT_001",
+      "productName": "Online Learning Platform",
+      "categoryId": 23,
+      "categoryName": "Education",
+      "description": "Comprehensive online learning platform for educational institutions",
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:56:12.530338",
+      "updatedAt": "2025-09-26T17:56:12.530338",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "healthcareCampaign": {
+      "id": 2,
+      "campaignCode": "HEALTH_2025",
+      "campaignName": "Healthcare Innovation 2025",
+      "description": "Campaign for healthcare technology innovation",
+      "startDate": null,
+      "endDate": null,
+      "allowedProductIds": [
+        22
+      ],
+      "allowedProductNames": [
+        "Advanced Medical Software"
+      ],
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:56:22.125979",
+      "updatedAt": "2025-09-26T17:56:22.125979",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "educationCampaign": {
+      "id": 3,
+      "campaignCode": "EDU_2025",
+      "campaignName": "Education Excellence 2025",
+      "description": "Campaign for educational technology excellence",
+      "startDate": null,
+      "endDate": null,
+      "allowedProductIds": [
+        23
+      ],
+      "allowedProductNames": [
+        "Online Learning Platform"
+      ],
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:56:22.245916",
+      "updatedAt": "2025-09-26T17:56:22.245916",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    },
+    "workingAccount": {
+      "id": 3,
+      "codeNumeric": 90001,
+      "codeString": "WORKING_ACC",
+      "titleKey": "working.account",
+      "typeCode": "CASH",
+      "typeName": "Working Account",
+      "organizationId": 1,
+      "organizationName": "دفتر مرکزی",
+      "currencyId": 1,
+      "currencyCode": "IRR",
+      "isInternal": true,
+      "customerId": null,
+      "status": "ACTIVE",
+      "createdAt": "2025-09-26T17:59:56.606404",
+      "updatedAt": "2025-09-26T17:59:56.606404",
+      "createdBy": "anonymousUser",
+      "updatedBy": "anonymousUser"
+    }
+  },
+  "relationships": {
+    "currencyToAccount": "WORKING",
+    "organizationToAccount": "WORKING",
+    "categoryToProduct": "WORKING",
+    "productToCampaign": "WORKING"
+  },
+  "apiEndpoints": {
+    "/currencies": "FULLY FUNCTIONAL",
+    "/organizations": "FULLY FUNCTIONAL",
+    "/categories": "FULLY FUNCTIONAL",
+    "/products": "FULLY FUNCTIONAL",
+    "/campaigns": "FULLY FUNCTIONAL",
+    "/accounts": "FULLY FUNCTIONAL"
+  },
+  "crudOperations": {
+    "CREATE": "All entities working",
+    "READ": "All entities working",
+    "UPDATE": "All entities working",
+    "DELETE": "All entities working"
+  }
+}

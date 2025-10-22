@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+  <!-- H2 doesn't need explicit sequences for IDENTITY columns -->
+
+  <!-- CURRENCIES -->
+  <changeSet author="ledgerx" id="000-010-currencies">
+    <addUniqueConstraint columnNames="CURRENCY_CODE" constraintName="UK_CURRENCIES_CODE"
+      tableName="CURRENCIES"/>
+    <addUniqueConstraint columnNames="CURRENCY_NUM_CODE" constraintName="UK_CURRENCIES_NUM"
+      tableName="CURRENCIES"/>
+    <addUniqueConstraint columnNames="SWIFT_CODE" constraintName="UK_CURRENCIES_SWIFT"
+      tableName="CURRENCIES"/>
+    <createTable tableName="CURRENCIES">
+      <column autoIncrement="true" name="ID" type="BIGINT">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="CURRENCY_CODE" type="VARCHAR(3)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CURRENCY_NUM_CODE" type="INTEGER">
+        <constraints nullable="false"/>
+      </column>
+      <column name="SWIFT_CODE" type="VARCHAR(3)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CURRENCY_NAME" type="VARCHAR(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="SYMBOL" type="VARCHAR(10)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="DECIMAL_PRECISION" type="INTEGER">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR(100)"/>
+    </createTable>
+  </changeSet>
+
+  <!-- ORGANIZATIONAL_UNITS (OrganizationalUnit) -->
+  <changeSet author="ledgerx" id="000-020-organizations">
+    <addForeignKeyConstraint baseColumnNames="PARENT_ORGANIZATION_ID"
+      baseTableName="ORGANIZATIONAL_UNITS" constraintName="FK_ORG_PARENT"
+      referencedColumnNames="ID" referencedTableName="ORGANIZATIONAL_UNITS"/>
+    <addUniqueConstraint columnNames="ORGANIZATION_CODE" constraintName="UK_ORG_CODE"
+      tableName="ORGANIZATIONAL_UNITS"/>
+    <createTable tableName="ORGANIZATIONAL_UNITS">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="ORGANIZATION_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="ORGANIZATION_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PARENT_ORGANIZATION_ID" type="NUMBER(19)"/>
+      <column name="DESCRIPTION" type="CLOB"/>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+  </changeSet>
+
+  <!-- ACCOUNT_TYPES and allowed relations -->
+  <changeSet author="ledgerx" id="000-030-account-types">
+    <addForeignKeyConstraint baseColumnNames="ACCOUNT_TYPE_ID"
+      baseTableName="ACCOUNT_TYPE_ALLOWED_CURRENCIES" constraintName="FK_AT_CURR_AT"
+      referencedColumnNames="ID" referencedTableName="ACCOUNT_TYPES"/>
+    <addForeignKeyConstraint baseColumnNames="CURRENCY_ID"
+      baseTableName="ACCOUNT_TYPE_ALLOWED_CURRENCIES" constraintName="FK_AT_CURR_CURR" referencedColumnNames="ID"
+      referencedTableName="CURRENCIES"/>
+
+    <addForeignKeyConstraint baseColumnNames="ACCOUNT_TYPE_ID"
+      baseTableName="ACCOUNT_TYPE_ALLOWED_ORG_UNITS" constraintName="FK_AT_OU_AT"
+      referencedColumnNames="ID" referencedTableName="ACCOUNT_TYPES"/>
+    <addForeignKeyConstraint baseColumnNames="ORG_UNIT_ID"
+      baseTableName="ACCOUNT_TYPE_ALLOWED_ORG_UNITS" constraintName="FK_AT_OU_OU"
+      referencedColumnNames="ID" referencedTableName="ORGANIZATIONAL_UNITS"/>
+    <addPrimaryKey columnNames="ACCOUNT_TYPE_ID,CURRENCY_ID"
+      constraintName="PK_AT_CURR" tableName="ACCOUNT_TYPE_ALLOWED_CURRENCIES"/>
+    <addPrimaryKey columnNames="ACCOUNT_TYPE_ID,ORG_UNIT_ID"
+      constraintName="PK_AT_OU" tableName="ACCOUNT_TYPE_ALLOWED_ORG_UNITS"/>
+
+    <addUniqueConstraint columnNames="TYPE_CODE" constraintName="UK_AT_CODE"
+      tableName="ACCOUNT_TYPES"/>
+    <createTable tableName="ACCOUNT_TYPES">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="TYPE_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TYPE_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="DESCRIPTION" type="VARCHAR2(1000)"/>
+      <column name="ACCOUNT_GROUP" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValueNumeric="1" name="IS_INTERNAL" type="NUMBER(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValueNumeric="0" name="ALLOW_GOODS_SUBACCOUNTS" type="NUMBER(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+    <createTable tableName="ACCOUNT_TYPE_ALLOWED_CURRENCIES">
+      <column name="ACCOUNT_TYPE_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CURRENCY_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <createTable tableName="ACCOUNT_TYPE_ALLOWED_ORG_UNITS">
+      <column name="ACCOUNT_TYPE_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="ORG_UNIT_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+  </changeSet>
+
+  <!-- PARTY_TYPES and PARTIES -->
+  <changeSet author="ledgerx" id="000-040-parties">
+    <addForeignKeyConstraint baseColumnNames="PARTY_TYPE_ID" baseTableName="PARTIES"
+      constraintName="FK_PARTY_PT" referencedColumnNames="ID" referencedTableName="PARTY_TYPES"/>
+    <addUniqueConstraint columnNames="TYPE_CODE" constraintName="UK_PT_CODE"
+      tableName="PARTY_TYPES"/>
+
+    <createTable tableName="PARTIES">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="EXTERNAL_ID" type="VARCHAR2(100)"/>
+      <column name="PARTY_TYPE_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+    <createTable tableName="PARTY_TYPES">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="TYPE_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TYPE_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="DESCRIPTION" type="VARCHAR2(1000)"/>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+  </changeSet>
+
+  <!-- ACCOUNT_TYPE_ALLOWED_PARTY_TYPES after PARTY_TYPES exists -->
+  <changeSet author="ledgerx" id="000-045-account-type-allowed-party-types">
+    <addForeignKeyConstraint baseColumnNames="ACCOUNT_TYPE_ID"
+      baseTableName="ACCOUNT_TYPE_ALLOWED_PARTY_TYPES" constraintName="FK_AT_PT_AT"
+      referencedColumnNames="ID" referencedTableName="ACCOUNT_TYPES"/>
+    <addForeignKeyConstraint baseColumnNames="PARTY_TYPE_ID"
+      baseTableName="ACCOUNT_TYPE_ALLOWED_PARTY_TYPES" constraintName="FK_AT_PT_PT" referencedColumnNames="ID"
+      referencedTableName="PARTY_TYPES"/>
+    <addPrimaryKey columnNames="ACCOUNT_TYPE_ID,PARTY_TYPE_ID"
+      constraintName="PK_AT_PT" tableName="ACCOUNT_TYPE_ALLOWED_PARTY_TYPES"/>
+    <createTable tableName="ACCOUNT_TYPE_ALLOWED_PARTY_TYPES">
+      <column name="ACCOUNT_TYPE_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PARTY_TYPE_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <!-- PRODUCTS and PLANS -->
+  <changeSet author="ledgerx" id="000-050-products-plans">
+    <addForeignKeyConstraint baseColumnNames="PRODUCT_ID" baseTableName="PLANS"
+      constraintName="FK_PLAN_PRODUCT" referencedColumnNames="ID" referencedTableName="PRODUCTS"/>
+    <addForeignKeyConstraint baseColumnNames="GOODS_GROUP_ID" baseTableName="GOODS"
+      constraintName="FK_GOODS_GROUP" referencedColumnNames="ID"
+      referencedTableName="GOODS_GROUPS"/>
+
+    <addForeignKeyConstraint baseColumnNames="PLAN_ID" baseTableName="PLAN_ALLOWED_GOODS_GROUPS"
+      constraintName="FK_PLAN_GG_PLAN" referencedColumnNames="ID" referencedTableName="PLANS"/>
+    <addForeignKeyConstraint baseColumnNames="GOODS_GROUP_ID"
+      baseTableName="PLAN_ALLOWED_GOODS_GROUPS" constraintName="FK_PLAN_GG_GG" referencedColumnNames="ID"
+      referencedTableName="GOODS_GROUPS"/>
+    <addForeignKeyConstraint baseColumnNames="PLAN_ID" baseTableName="PLAN_ALLOWED_GOODS"
+      constraintName="FK_PLAN_GOODS_PLAN" referencedColumnNames="ID" referencedTableName="PLANS"/>
+
+    <addForeignKeyConstraint baseColumnNames="GOODS_ID" baseTableName="PLAN_ALLOWED_GOODS"
+      constraintName="FK_PLAN_GOODS_GOODS" referencedColumnNames="ID" referencedTableName="GOODS"/>
+    <addPrimaryKey columnNames="PLAN_ID,GOODS_GROUP_ID" constraintName="PK_PLAN_GG"
+      tableName="PLAN_ALLOWED_GOODS_GROUPS"/>
+
+    <addPrimaryKey columnNames="PLAN_ID,GOODS_ID" constraintName="PK_PLAN_GOODS"
+      tableName="PLAN_ALLOWED_GOODS"/>
+    <addUniqueConstraint columnNames="PRODUCT_CODE" constraintName="UK_PRODUCT_CODE"
+      tableName="PRODUCTS"/>
+    <addUniqueConstraint columnNames="PLAN_CODE" constraintName="UK_PLAN_CODE" tableName="PLANS"/>
+
+    <addUniqueConstraint columnNames="GROUP_CODE" constraintName="UK_GG_CODE"
+      tableName="GOODS_GROUPS"/>
+    <addUniqueConstraint columnNames="GOODS_CODE" constraintName="UK_GOODS_CODE" tableName="GOODS"/>
+    <createTable tableName="PRODUCTS">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="PRODUCT_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PRODUCT_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="DESCRIPTION" type="CLOB"/>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+    <createTable tableName="PLANS">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="PRODUCT_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PLAN_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PLAN_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+
+    <createTable tableName="GOODS_GROUPS">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="GROUP_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="GROUP_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+    <createTable tableName="GOODS">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="GOODS_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="GOODS_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="GOODS_GROUP_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+    <createTable tableName="PLAN_ALLOWED_GOODS_GROUPS">
+      <column name="PLAN_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="GOODS_GROUP_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <createTable tableName="PLAN_ALLOWED_GOODS">
+      <column name="PLAN_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="GOODS_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <!-- ACCOUNT_TYPE_PRODUCTS relation after PRODUCTS exist -->
+  <changeSet author="ledgerx" id="000-055-account-type-products">
+    <addForeignKeyConstraint baseColumnNames="ACCOUNT_TYPE_ID" baseTableName="ACCOUNT_TYPE_PRODUCTS"
+      constraintName="FK_AT_PRODUCTS_AT" referencedColumnNames="ID"
+      referencedTableName="ACCOUNT_TYPES"/>
+    <addForeignKeyConstraint baseColumnNames="PRODUCT_ID" baseTableName="ACCOUNT_TYPE_PRODUCTS"
+      constraintName="FK_AT_PRODUCTS_PRODUCT" referencedColumnNames="ID"
+      referencedTableName="PRODUCTS"/>
+    <addPrimaryKey columnNames="ACCOUNT_TYPE_ID,PRODUCT_ID" constraintName="PK_AT_PRODUCTS"
+      tableName="ACCOUNT_TYPE_PRODUCTS"/>
+    <createTable tableName="ACCOUNT_TYPE_PRODUCTS">
+      <column name="ACCOUNT_TYPE_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PRODUCT_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="RELATION" type="VARCHAR2(50)"/>
+    </createTable>
+  </changeSet>
+
+  <!-- FEES, DOCUMENT_TEMPLATES, EVENT_TYPES -->
+  <changeSet author="ledgerx" id="000-060-fees-docs-events">
+    <addForeignKeyConstraint baseColumnNames="FEE_ID" baseTableName="EVENT_TYPES"
+      constraintName="FK_EVENT_FEE" referencedColumnNames="ID" referencedTableName="FEES"/>
+
+    <addForeignKeyConstraint baseColumnNames="DOCUMENT_TEMPLATE_ID" baseTableName="EVENT_TYPES"
+      constraintName="FK_EVENT_DOC" referencedColumnNames="ID"
+      referencedTableName="DOCUMENT_TEMPLATES"/>
+    <addUniqueConstraint columnNames="TEMPLATE_CODE" constraintName="UK_DOC_CODE"
+      tableName="DOCUMENT_TEMPLATES"/>
+
+    <addUniqueConstraint columnNames="EVENT_CODE" constraintName="UK_EVENT_CODE"
+      tableName="EVENT_TYPES"/>
+    <createTable tableName="DOCUMENT_TEMPLATES">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="TEMPLATE_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TEMPLATE_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TEMPLATE_TYPE" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValueNumeric="1" name="PARAMETRIC" type="NUMBER(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TEMPLATE_DEFINITION" type="CLOB"/>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+    <createTable tableName="FEES">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="FEE_NAME" type="VARCHAR2(200)"/>
+      <column name="PERCENTAGE" type="NUMBER(18,6)"/>
+      <column name="FIXED_AMOUNT" type="NUMBER(24,6)"/>
+      <column name="MIN_AMOUNT" type="NUMBER(24,6)"/>
+      <column name="MAX_AMOUNT" type="NUMBER(24,6)"/>
+      <column name="TIER_DEFINITION" type="CLOB"/>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+    <createTable tableName="EVENT_TYPES">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="SUBSYSTEM" type="VARCHAR2(50)"/>
+      <column name="EVENT_GROUP" type="VARCHAR2(50)"/>
+      <column name="EVENT_SUBGROUP" type="VARCHAR2(50)"/>
+      <column name="EVENT_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="EVENT_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="FEE_ID" type="NUMBER(19)"/>
+      <column name="DOCUMENT_TEMPLATE_ID" type="NUMBER(19)"/>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+  </changeSet>
+
+  <!-- ACCOUNTS -->
+  <changeSet author="ledgerx" id="000-070-accounts">
+    <addForeignKeyConstraint baseColumnNames="ORG_UNIT_ID" baseTableName="ACCOUNTS"
+      constraintName="FK_ACC_ORG" referencedColumnNames="ID"
+      referencedTableName="ORGANIZATIONAL_UNITS"/>
+    <addForeignKeyConstraint baseColumnNames="CURRENCY_ID" baseTableName="ACCOUNTS"
+      constraintName="FK_ACC_CURR" referencedColumnNames="ID" referencedTableName="CURRENCIES"/>
+    <addForeignKeyConstraint baseColumnNames="PARTY_ID" baseTableName="ACCOUNTS"
+      constraintName="FK_ACC_PARTY" referencedColumnNames="ID" referencedTableName="PARTIES"/>
+    <addForeignKeyConstraint baseColumnNames="ACCOUNT_TYPE_ID" baseTableName="ACCOUNTS"
+      constraintName="FK_ACC_AT" referencedColumnNames="ID" referencedTableName="ACCOUNT_TYPES"/>
+    <addForeignKeyConstraint baseColumnNames="PLAN_ID" baseTableName="ACCOUNTS"
+      constraintName="FK_ACC_PLAN" referencedColumnNames="ID" referencedTableName="PLANS"/>
+    <addForeignKeyConstraint baseColumnNames="PARENT_ACCOUNT_ID" baseTableName="ACCOUNTS"
+      constraintName="FK_ACC_PARENT" referencedColumnNames="ID" referencedTableName="ACCOUNTS"/>
+    <addUniqueConstraint columnNames="NUMERIC_CODE" constraintName="UK_ACC_NUM"
+      tableName="ACCOUNTS"/>
+    <addUniqueConstraint columnNames="STRING_CODE" constraintName="UK_ACC_STR"
+      tableName="ACCOUNTS"/>
+    <createTable tableName="ACCOUNTS">
+      <column name="ID" type="NUMBER(19)">
+        <constraints nullable="false" primaryKey="true"/>
+      </column>
+      <column name="NUMERIC_CODE" type="NUMBER(10)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="STRING_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TITLE_KEY" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TYPE_CODE" type="VARCHAR2(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="TYPE_NAME" type="VARCHAR2(200)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="ORG_UNIT_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CURRENCY_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValueNumeric="1" name="IS_INTERNAL" type="NUMBER(1)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PARTY_ID" type="NUMBER(19)"/>
+      <column name="ACCOUNT_TYPE_ID" type="NUMBER(19)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="PLAN_ID" type="NUMBER(19)"/>
+      <column name="PARENT_ACCOUNT_ID" type="NUMBER(19)"/>
+      <column defaultValueNumeric="0" name="BALANCE" type="NUMBER(24,6)">
+        <constraints nullable="false"/>
+      </column>
+      <column defaultValue="ACTIVE" name="STATUS" type="VARCHAR2(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="CREATED_AT" type="TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="UPDATED_AT" type="TIMESTAMP"/>
+      <column name="CREATED_BY" type="VARCHAR2(100)"/>
+      <column name="UPDATED_BY" type="VARCHAR2(100)"/>
+    </createTable>
+  </changeSet>
+
+</databaseChangeLog>
+
+

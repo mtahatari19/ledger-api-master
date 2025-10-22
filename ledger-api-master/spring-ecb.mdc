@@ -1,0 +1,795 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+description: >
+  Spring Boot ECB + Oracle + Liquibase + OAuth2/Keycloak — project rules.
+  Always apply these guardrails to keep architecture, API design, and tooling consistent.
+  Supports Persian (fa) and English (en) internationalization.
+globs:
+  - "**/*.java"
+  - "**/*.kt"
+  - "pom.xml"
+  - "build.gradle*"
+  - "settings.gradle*"
+  - "**/application*.yml"
+  - "src/main/resources/db/changelog/**"
+  - "src/main/resources/messages/**"
+alwaysApply: true
+---
+
+# Spring Boot ECB Backend — Project Rules
+
+## Goals
+- Service built with **Spring Boot 3.x** and **Java 21+**.
+- **ECB (Entity–Control–Boundary)** layering with strict one-way dependencies.
+- **Oracle** as DB; **Liquibase** for all schema changes (no Flyway anywhere).
+- **RESTful** APIs with **springdoc OpenAPI/Swagger**.
+- **OAuth2 / Keycloak** (JWT resource server) security.
+- Standardized **API envelope** for success and errors; show **200/400/404/500** examples on API *interfaces*.
+- **Bilingual Support**: Persian (fa) and English (en) internationalization across all layers.
+
+## Architecture Guardrails (ECB)
+- `entity` → JPA entities & repositories (no business logic).
+  - **Use Foundation**: Extend `AuditableEntity` for entities, `BaseRepository` for repositories.
+- `control` → use-cases/services, `@Transactional` boundaries, no HTTP/DB specifics.
+  - **Use Foundation**: Extend `AbstractBaseService` and implement `BaseService` interface.
+- `boundary` →
+  - `boundary.api`: **interfaces** with OpenAPI annotations & examples.
+    - **Use Foundation**: Extend `BaseApi<ID, R, C, U>` for consistent API contracts.
+  - `boundary.http`: controllers that **implement** the interfaces and delegate to control.
+    - **Use Foundation**: Extend `BaseController<ID, R, C, U>` for consistent controller implementation.
+  - `boundary.dto`: request/response **DTOs** (records preferred), never expose entities.
+  - `boundary.mapper`: **MapStruct** mappers; avoid manual mapping.
+    - **Use Foundation**: Implement `BaseMapper<T, ID, C, U, R>` for consistent mapping patterns.
+- Controllers must be thin; **no business logic** in controllers.
+
+## Foundation Benefits
+- **Consistency**: Standardized patterns across all layers reduce cognitive load.
+- **DRY Principle**: Common functionality centralized in foundation classes.
+- **Type Safety**: Generic type parameters ensure compile-time safety.
+- **Maintainability**: Changes to common patterns only need to be made in foundation.
+- **Testing**: Foundation classes are pre-tested, reducing test surface area.
+- **Documentation**: Foundation classes provide clear contracts and examples.
+
+## Security (OAuth2 / Keycloak)
+- Use `spring-boot-starter-security` + `spring-boot-starter-oauth2-resource-server`.
+- Permit `/swagger-ui/**`, `/v3/api-docs/**`, `/actuator/**` if needed; secure all else.
+- Use method security (`@PreAuthorize`) where the spec requires role/scope checks.
+
+## Database & Migrations (Liquibase + Oracle)
+- Dependencies: `ojdbc11`, `liquibase-core`, Spring Data JPA.
+- Define **sequences** and **tables** in Liquibase changesets under `src/main/resources/db/changelog/`.
+- Test profile uses Liquibase with `drop-first: true` to reset schema between tests.
+- Primary keys use `@SequenceGenerator` with Oracle sequences.
+
+## API Envelope & Errors
+- **Use Foundation Classes**: Import and use `com.foundation.core.api.ApiResponse<T>` and `com.foundation.core.api.ApiError`.
+- **ApiResponse<T>**: `{ status: "success"|"error", message, data, traceId }` with JSON:API support.
+- **ApiError**: `{ code, message, localizedMessage, status, traceId, details }`.
+- **Error codes**: **neutral**, no domain prefixes (e.g., `NOT_FOUND`, `VALIDATION_FAILED`, `INTERNAL_ERROR`).
+
+### Example (200)
+```json
+{
+  "status": "success",
+  "message": "OK",
+  "data": { "id": 1, "name": "Bond A" },
+  "traceId": "abc-123"
+}
+```
+### Example (404)
+```json
+{
+  "code": "NOT_FOUND",
+  "message": "Product not found",
+  "localizedMessage": "…",
+  "status": 404,
+  "traceId": "abc-123"
+}
+```
+
+## OpenAPI / Swagger (on *interfaces*)
+- **Use Foundation Interfaces**: Extend `com.foundation.core.boundary.api.BaseApi<ID, R, C, U>` for API interfaces.
+- Put `@Operation`, `@ApiResponses(200/400/404/500)`, `@ExampleObject` on `boundary.api` interfaces.
+- Controllers **do not** carry OpenAPI annotations; they simply implement the interface.
+- Use DTO schemas for request/response; never expose entities.
+
+## RESTful API Design (Richardson Maturity Model)
+
+### Level 0: The Swamp of POX (Plain Old XML)
+- **Avoid**: Single endpoint with all operations via POST.
+- **Example**: `POST /api/orders` with operation type in body.
+
+### Level 1: Resources
+- **Use**: Multiple endpoints, one per resource.
+- **Example**: `POST /api/orders`, `GET /api/orders/{id}`, `PUT /api/orders/{id}`.
+- **Guidelines**:
+  - Use nouns for resources, not verbs.
+  - Use plural nouns: `/api/orders`, `/api/products`, `/api/users`.
+  - Avoid: `/api/getOrder`, `/api/createOrder`.
+
+### Level 2: HTTP Verbs
+- **Use**: Proper HTTP methods for operations.
+- **Guidelines**:
+  - `GET` for retrieval (idempotent, cacheable).
+  - `POST` for creation (non-idempotent).
+  - `PUT` for full updates (idempotent).
+  - `PATCH` for partial updates (non-idempotent).
+  - `DELETE` for removal (idempotent).
+  - Use proper HTTP status codes: `200`, `201`, `204`, `400`, `404`, `500`.
+
+
+### RESTful Best Practices
+- **URL Design**: Use hierarchical resources: `/api/orders/{id}/items`.
+- **Query Parameters**: Use for filtering, pagination, sorting: `?page=0&size=20&sort=name,asc`.
+- **Content Negotiation**: Support `Accept` and `Content-Type` headers.
+- **Versioning**: Use URL versioning: `/api/v1/orders` or header versioning.
+- **Caching**: Use `Cache-Control`, `ETag`, `Last-Modified` headers.
+- **Pagination**: Use `Page<T>` from Spring Data with metadata.
+
+## Internationalization (I18n) - Persian & English Support
+
+### Supported Languages
+- **English (en)**: Default language, fallback for all operations
+- **Persian (fa)**: Right-to-left (RTL) language support with proper Unicode handling
+
+### Message Sources Configuration
+- **Location**: `src/main/resources/messages/` directory
+- **Files**: 
+  - `messages.properties` (default/fallback - English)
+  - `messages_en.properties` (English)
+  - `messages_fa.properties` (Persian)
+- **Encoding**: UTF-8 for all message files (required for Persian characters)
+
+### Application Configuration
+```properties
+# application.properties
+spring.messages.basename=messages/messages
+spring.messages.encoding=UTF-8
+spring.messages.cache-duration=3600s
+spring.messages.fallback-to-system-locale=true
+
+# Persian locale support
+spring.web.locale=fa
+spring.web.locale-resolver=accept_header
+```
+
+### Locale Configuration
+```java
+@Configuration
+public class I18nConfig {
+    
+    @Bean
+    public LocaleResolver localeResolver() {
+        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
+        localeResolver.setSupportedLocales(Arrays.asList(
+            Locale.ENGLISH, 
+            new Locale("fa") // Persian locale
+        ));
+        localeResolver.setDefaultLocale(Locale.ENGLISH);
+        return localeResolver;
+    }
+    
+    @Bean
+    public MessageSource messageSource() {
+        ReloadableResourceBundleMessageSource messageSource = 
+            new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:messages/messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setCacheSeconds(3600);
+        messageSource.setFallbackToSystemLocale(true);
+        return messageSource;
+    }
+}
+```
+
+### Message Files Structure
+```
+src/main/resources/messages/
+├── messages.properties (default - English)
+├── messages_en.properties (English)
+├── messages_fa.properties (Persian)
+└── domains/
+    ├── user/
+    │   ├── user-management.properties
+    │   └── user-validation.properties
+    ├── product/
+    │   ├── product-management.properties
+    │   └── product-validation.properties
+    └── common/
+        ├── common-messages.properties
+        └── common-errors.properties
+```
+
+### Message Keys Convention
+- **Format**: `{domain}.{action}.{context}` (e.g., `product.found.success`, `user.validation.email.invalid`)
+- **Examples**:
+
+#### English (messages_en.properties)
+```properties
+# User Management
+user.management.create.success=User {0} created successfully
+user.management.update.success=User {0} updated successfully
+user.management.delete.success=User {0} deleted successfully
+user.management.not.found=User with ID {0} not found
+user.management.validation.username.required=Username is required
+user.management.validation.email.invalid=Invalid email format
+user.management.validation.email.exists=Email {0} already exists
+
+# Product Management
+product.management.create.success=Product {0} created successfully
+product.management.update.success=Product {0} updated successfully
+product.management.delete.success=Product {0} deleted successfully
+product.management.not.found=Product with ID {0} not found
+product.management.validation.name.required=Product name is required
+product.management.validation.price.invalid=Invalid price value
+
+# Common Messages
+common.success.operation=Operation completed successfully
+common.error.not.found={0} not found
+common.error.internal.server=Internal server error occurred
+common.validation.required={0} is required
+common.validation.invalid.format=Invalid format for {0}
+```
+
+#### Persian (messages_fa.properties)
+```properties
+# User Management
+user.management.create.success=کاربر {0} با موفقیت ایجاد شد
+user.management.update.success=کاربر {0} با موفقیت به‌روزرسانی شد
+user.management.delete.success=کاربر {0} با موفقیت حذف شد
+user.management.not.found=کاربر با شناسه {0} یافت نشد
+user.management.validation.username.required=نام کاربری الزامی است
+user.management.validation.email.invalid=فرمت ایمیل نامعتبر است
+user.management.validation.email.exists=ایمیل {0} قبلاً ثبت شده است
+
+# Product Management
+product.management.create.success=محصول {0} با موفقیت ایجاد شد
+product.management.update.success=محصول {0} با موفقیت به‌روزرسانی شد
+product.management.delete.success=محصول {0} با موفقیت حذف شد
+product.management.not.found=محصول با شناسه {0} یافت نشد
+product.management.validation.name.required=نام محصول الزامی است
+product.management.validation.price.invalid=مقدار قیمت نامعتبر است
+
+# Common Messages
+common.success.operation=عملیات با موفقیت انجام شد
+common.error.not.found={0} یافت نشد
+common.error.internal.server=خطای داخلی سرور رخ داده است
+common.validation.required={0} الزامی است
+common.validation.invalid.format=فرمت نامعتبر برای {0}
+```
+
+### Usage in All Layers
+
+#### 1. Entity Layer with Validation Messages
+```java
+@Entity
+@Table(name = "PRODUCTS")
+public class Product extends AuditableEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "PRODUCT_SEQ")
+    @SequenceGenerator(name = "PRODUCT_SEQ", sequenceName = "PRODUCT_SEQ", allocationSize = 1)
+    private Long id;
+    
+    @Column(name = "NAME", nullable = false)
+    @NotNull(message = "{product.validation.name.required}")
+    @Size(min = 2, max = 100, message = "{product.validation.name.size}")
+    private String name;
+    
+    @Column(name = "PRICE", nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "{product.validation.price.required}")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{product.validation.price.invalid}")
+    private BigDecimal price;
+    
+    @Column(name = "DESCRIPTION")
+    @Size(max = 500, message = "{product.validation.description.size}")
+    private String description;
+    
+    // Getters and setters...
+}
+
+// Repository extends foundation BaseRepository
+@Repository
+public interface ProductRepository extends BaseRepository<Product, Long> {
+    // Custom query methods can be added here
+    boolean existsByName(String name);
+}
+```
+
+#### 2. Control Layer (Services)
+```java
+@Service
+public class ProductService extends AbstractBaseService<Product, Long, CreateProductRequest, UpdateProductRequest, ProductDto> {
+    
+    private final ProductRepository productRepository;
+    private final MessageSource messageSource;
+    private final ProductMapper productMapper;
+    
+    public ProductService(ProductRepository productRepository, MessageSource messageSource, ProductMapper productMapper) {
+        super(productRepository);
+        this.productRepository = productRepository;
+        this.messageSource = messageSource;
+        this.productMapper = productMapper;
+    }
+    
+    @Override
+    protected Product mapCreateDtoToEntity(CreateProductRequest createDto) {
+        // Business logic with i18n messages
+        if (productRepository.existsByName(createDto.name())) {
+            String message = messageSource.getMessage(
+                "product.management.validation.name.exists", 
+                new Object[]{createDto.name()}, 
+                LocaleContextHolder.getLocale()
+            );
+            throw new ProductAlreadyExistsException(message);
+        }
+        
+        return productMapper.toEntity(createDto);
+    }
+    
+    @Override
+    protected ProductDto mapEntityToResponseDto(Product entity) {
+        return productMapper.toResponseDto(entity);
+    }
+    
+    @Override
+    protected void updateEntityFromDto(Product entity, UpdateProductRequest updateDto) {
+        productMapper.updateEntity(entity, updateDto);
+    }
+    
+    @Override
+    @Transactional
+    public ProductDto create(CreateProductRequest createDto) {
+        ProductDto result = super.create(createDto);
+        
+        // Log with i18n message
+        String logMessage = messageSource.getMessage(
+            "product.management.create.success", 
+            new Object[]{result.name()}, 
+            LocaleContextHolder.getLocale()
+        );
+        log.info(logMessage);
+        
+        return result;
+    }
+}
+```
+
+#### 3. Boundary Layer (Controllers)
+
+**API Interface:**
+```java
+public interface ProductApi extends BaseApi<Long, ProductDto, CreateProductRequest, UpdateProductRequest> {
+    // Additional custom endpoints can be defined here
+    // Base CRUD operations are inherited from BaseApi
+}
+```
+
+**Controller Implementation:**
+```java
+@RestController
+@RequestMapping("/api/v1/products")
+public class ProductController extends BaseController<Long, ProductDto, CreateProductRequest, UpdateProductRequest> {
+    
+    private final ProductService productService;
+    private final MessageSource messageSource;
+    
+    public ProductController(ProductService productService, MessageSource messageSource) {
+        super(productService);
+        this.productService = productService;
+        this.messageSource = messageSource;
+    }
+    
+    @Override
+    public ResponseEntity<ProductDto> create(CreateProductRequest request) {
+        ProductDto productDto = productService.create(request);
+        
+        String message = messageSource.getMessage(
+            "product.management.create.success", 
+            new Object[]{productDto.name()}, 
+            LocaleContextHolder.getLocale()
+        );
+        
+        // Log success message
+        log.info(message);
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(productDto);
+    }
+    
+    @Override
+    public ResponseEntity<ProductDto> findById(Long id) {
+        ProductDto productDto = productService.findById(id);
+        
+        String message = messageSource.getMessage(
+            "product.management.get.success", 
+            new Object[]{productDto.name()}, 
+            LocaleContextHolder.getLocale()
+        );
+        
+        // Log success message
+        log.info(message);
+        
+        return ResponseEntity.ok(productDto);
+    }
+}
+```
+
+#### 4. Mapping Layer (DTOs and Mappers)
+```java
+// DTOs as records (preferred)
+public record CreateProductRequest(
+    @NotBlank(message = "{product.validation.name.required}")
+    @Size(min = 2, max = 100, message = "{product.validation.name.size}")
+    String name,
+    
+    @NotNull(message = "{product.validation.price.required}")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{product.validation.price.invalid}")
+    BigDecimal price,
+    
+    @Size(max = 500, message = "{product.validation.description.size}")
+    String description
+) {}
+
+public record UpdateProductRequest(
+    @NotBlank(message = "{product.validation.name.required}")
+    @Size(min = 2, max = 100, message = "{product.validation.name.size}")
+    String name,
+    
+    @NotNull(message = "{product.validation.price.required}")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{product.validation.price.invalid}")
+    BigDecimal price,
+    
+    @Size(max = 500, message = "{product.validation.description.size}")
+    String description
+) {}
+
+public record ProductDto(
+    Long id,
+    String name,
+    BigDecimal price,
+    String description,
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt,
+    String createdBy,
+    String updatedBy
+) {}
+
+// Mapper using foundation BaseMapper interface
+@Mapper(componentModel = "spring")
+public interface ProductMapper extends BaseMapper<Product, Long, CreateProductRequest, UpdateProductRequest, ProductDto> {
+    
+    @Override
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    Product toEntity(CreateProductRequest createDto);
+    
+    @Override
+    ProductDto toResponseDto(Product entity);
+    
+    @Override
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    void updateEntity(Product entity, UpdateProductRequest updateDto);
+}
+```
+
+#### 5. Exception Handling with I18n
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler extends com.foundation.core.api.GlobalExceptionHandler {
+    
+    private final MessageSource messageSource;
+    
+    public GlobalExceptionHandler(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+    
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<com.foundation.core.api.ApiError> handleProductNotFound(
+            ProductNotFoundException ex, 
+            Locale locale) {
+        
+        String localizedMessage = messageSource.getMessage(
+            "product.management.not.found", 
+            new Object[]{ex.getProductId()}, 
+            locale
+        );
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(com.foundation.core.api.ApiError.of(
+                "PRODUCT_NOT_FOUND",
+                ex.getMessage(),
+                localizedMessage,
+                HttpStatus.NOT_FOUND,
+                MDC.get("traceId"),
+                null
+            ));
+    }
+    
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<com.foundation.core.api.ApiError> handleValidationErrors(
+            MethodArgumentNotValidException ex,
+            Locale locale) {
+        
+        List<String> errors = ex.getBindingResult()
+            .getFieldErrors()
+            .stream()
+            .map(error -> messageSource.getMessage(
+                error.getDefaultMessage(), 
+                error.getArguments(), 
+                locale
+            ))
+            .collect(Collectors.toList());
+        
+        String localizedMessage = messageSource.getMessage(
+            "common.validation.failed", 
+            new Object[]{String.join(", ", errors)}, 
+            locale
+        );
+        
+        return ResponseEntity.badRequest()
+            .body(com.foundation.core.api.ApiError.of(
+                "VALIDATION_FAILED",
+                "Validation failed",
+                localizedMessage,
+                HttpStatus.BAD_REQUEST,
+                MDC.get("traceId"),
+                errors
+            ));
+    }
+}
+```
+
+### Testing I18n - Persian & English
+
+#### Unit Tests
+```java
+@SpringBootTest
+@TestPropertySource(locations = "classpath:messages/test-messages.properties")
+class ProductServiceI18nTest {
+    
+    @Autowired
+    private ProductService productService;
+    
+    @Autowired
+    private MessageSource messageSource;
+    
+    @Test
+    void shouldReturnPersianErrorMessage() {
+        // Given
+        CreateProductRequest request = new CreateProductRequest("", BigDecimal.valueOf(100));
+        Locale persianLocale = new Locale("fa");
+        
+        // When & Then
+        assertThatThrownBy(() -> productService.createProduct(request, persianLocale))
+            .isInstanceOf(MethodArgumentNotValidException.class)
+            .hasMessageContaining("نام محصول الزامی است"); // Persian message
+    }
+    
+    @Test
+    void shouldReturnEnglishSuccessMessage() {
+        // Given
+        CreateProductRequest request = new CreateProductRequest("Test Product", BigDecimal.valueOf(100));
+        Locale englishLocale = Locale.ENGLISH;
+        
+        // When
+        ProductDto result = productService.createProduct(request, englishLocale);
+        
+        // Then
+        assertThat(result).isNotNull();
+        String message = messageSource.getMessage(
+            "product.management.create.success", 
+            new Object[]{result.name()}, 
+            englishLocale
+        );
+        assertThat(message).contains("created successfully");
+    }
+}
+```
+
+#### Integration Tests
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class ProductControllerI18nIntegrationTest {
+    
+    @LocalServerPort
+    private int port;
+    
+    @Test
+    void shouldReturnPersianErrorMessage() {
+        given()
+            .port(port)
+            .header("Accept-Language", "fa")
+            .contentType(ContentType.JSON)
+            .body("{\"name\":\"\",\"price\":100}")
+        .when()
+            .post("/api/v1/products")
+        .then()
+            .statusCode(400)
+            .body("localizedMessage", containsString("نام محصول الزامی است"));
+    }
+    
+    @Test
+    void shouldReturnEnglishSuccessMessage() {
+        given()
+            .port(port)
+            .header("Accept-Language", "en")
+            .contentType(ContentType.JSON)
+            .body("{\"name\":\"Test Product\",\"price\":100}")
+        .when()
+            .post("/api/v1/products")
+        .then()
+            .statusCode(201)
+            .body("message", containsString("created successfully"));
+    }
+    
+    @Test
+    void shouldDefaultToEnglishWhenNoLanguageHeader() {
+        given()
+            .port(port)
+            .contentType(ContentType.JSON)
+            .body("{\"name\":\"Test Product\",\"price\":100}")
+        .when()
+            .post("/api/v1/products")
+        .then()
+            .statusCode(201)
+            .body("message", containsString("created successfully"));
+    }
+}
+```
+
+### Persian Language Considerations
+- **RTL Support**: Persian text is right-to-left, ensure proper handling in frontend
+- **Unicode**: All Persian characters are properly encoded in UTF-8
+- **Date/Time**: Use Persian calendar format when displaying dates to Persian users
+- **Numbers**: Persian numerals (۰۱۲۳۴۵۶۷۸۹) vs Arabic numerals (0123456789)
+- **Currency**: Use appropriate currency symbols and formatting for Persian locale
+
+## Foundation Dependencies
+
+### Maven Dependency
+```xml
+<dependency>
+    <groupId>com.foundation</groupId>
+    <artifactId>code-foundation</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
+### Required Imports
+```java
+// Entity Layer
+import com.foundation.core.entity.AuditableEntity;
+import com.foundation.core.entity.BaseRepository;
+
+// Control Layer  
+import com.foundation.core.control.BaseService;
+import com.foundation.core.control.AbstractBaseService;
+
+// Boundary Layer
+import com.foundation.core.boundary.api.BaseApi;
+import com.foundation.core.boundary.http.BaseController;
+import com.foundation.core.boundary.mapper.BaseMapper;
+
+// API Layer
+import com.foundation.core.api.ApiResponse;
+import com.foundation.core.api.ApiError;
+import com.foundation.core.api.GlobalExceptionHandler;
+
+// CRUD Layer
+import com.foundation.core.crud.CrudService;
+import com.foundation.core.crud.JpaCrudService;
+import com.foundation.core.crud.CrudApi;
+import com.foundation.core.crud.CrudController;
+```
+
+## Project Layout (suggested)
+```
+src/main/java/com/tiddev/gam_services/
+├── entity/
+│   ├── Product.java (extends AuditableEntity)
+│   ├── User.java (extends AuditableEntity)
+│   └── repository/
+│       ├── ProductRepository.java (extends BaseRepository)
+│       └── UserRepository.java (extends BaseRepository)
+├── control/
+│   ├── ProductService.java (extends AbstractBaseService)
+│   ├── UserService.java (extends AbstractBaseService)
+│   └── exception/
+│       ├── ProductNotFoundException.java
+│       └── UserNotFoundException.java
+├── boundary/
+│   ├── api/
+│   │   ├── ProductApi.java (extends BaseApi)
+│   │   └── UserApi.java (extends BaseApi)
+│   ├── http/
+│   │   ├── ProductController.java (extends BaseController)
+│   │   └── UserController.java (extends BaseController)
+│   ├── dto/
+│   │   ├── ProductDto.java (records)
+│   │   └── UserDto.java (records)
+│   └── mapper/
+│       ├── ProductMapper.java (extends BaseMapper)
+│       └── UserMapper.java (extends BaseMapper)
+├── config/
+│   ├── SecurityConfig.java
+│   ├── I18nConfig.java
+│   └── LiquibaseConfig.java
+└── GamServicesApplication.java
+
+src/main/resources/
+├── db/changelog/
+│   ├── db.changelog-master.xml
+│   └── features/
+│       ├── user-management-v1.0.xml
+│       ├── product-management-v1.0.xml
+│       └── authentication-v1.0.xml
+├── messages/
+│   ├── messages.properties (default - English)
+│   ├── messages_en.properties (English)
+│   ├── messages_fa.properties (Persian)
+│   └── domains/
+│       ├── user/
+│       │   ├── user-management.properties
+│       │   └── user-validation.properties
+│       ├── product/
+│       │   ├── product-management.properties
+│       │   └── product-validation.properties
+│       └── common/
+│           ├── common-messages.properties
+│           └── common-errors.properties
+└── application.properties
+```
+
+## Best Practices for Foundation Classes
+
+### 1. Always Use Foundation Classes
+- **Entities**: Always extend `AuditableEntity` for automatic audit fields.
+- **Repositories**: Always extend `BaseRepository<T, ID>` for JPA and Specification support.
+- **Services**: Always extend `AbstractBaseService` and implement `BaseService` interface.
+- **Controllers**: Always extend `BaseController` and implement `BaseApi` interface.
+- **Mappers**: Always implement `BaseMapper` interface for consistent mapping patterns.
+
+### 2. Override Foundation Methods Carefully
+- Only override methods when you need custom business logic.
+- Call `super.methodName()` when extending foundation behavior.
+- Use foundation hooks (like `preCreate`, `preUpdate`, `preDelete`) for business logic.
+
+### 3. Type Safety
+- Always specify generic type parameters correctly.
+- Use the same ID type across all layers for consistency.
+- Prefer records for DTOs to ensure immutability.
+
+### 4. Exception Handling
+- Extend `com.foundation.core.api.GlobalExceptionHandler` for global exception handling.
+- Use `com.foundation.core.api.ApiError.of()` for consistent error responses.
+- Leverage foundation's built-in exception handling where possible.
+
+### 5. Testing
+- Foundation classes are pre-tested, focus on testing business logic.
+- Use foundation's test utilities and patterns.
+- Mock foundation dependencies in unit tests.
+
+### 6. Documentation
+- Foundation classes provide comprehensive JavaDoc.
+- Follow foundation patterns in your own documentation.
+- Use foundation examples as templates for new features.
+
+### 7. Migration Strategy
+- Gradually migrate existing code to use foundation classes.
+- Start with new features using foundation patterns.
+- Refactor existing code during maintenance windows.
+
+### 8. Common Pitfalls to Avoid
+- Don't bypass foundation classes for "quick fixes".
+- Don't duplicate functionality already provided by foundation.
+- Don't ignore foundation's type safety features.
+- Don't create custom base classes that compete with foundation.

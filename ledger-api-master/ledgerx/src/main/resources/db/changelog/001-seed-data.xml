@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+  <!-- Seed Account Types -->
+  <changeSet author="ledgerx" id="001-010-account-types">
+    <insert tableName="ACCOUNT_TYPES">
+      <column name="ID" valueNumeric="1"/>
+      <column name="TYPE_CODE" value="CASH"/>
+      <column name="TYPE_NAME" value="Cash Account"/>
+      <column name="DESCRIPTION" value="Cash and cash equivalents account"/>
+      <column name="ACCOUNT_GROUP" value="ASSET"/>
+      <column name="IS_INTERNAL" valueNumeric="1"/>
+      <column name="ALLOW_GOODS_SUBACCOUNTS" valueNumeric="0"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+
+    <insert tableName="ACCOUNT_TYPES">
+      <column name="ID" valueNumeric="2"/>
+      <column name="TYPE_CODE" value="INVESTMENT"/>
+      <column name="TYPE_NAME" value="Investment Account"/>
+      <column name="DESCRIPTION" value="Investment and securities account"/>
+      <column name="ACCOUNT_GROUP" value="ASSET"/>
+      <column name="IS_INTERNAL" valueNumeric="1"/>
+      <column name="ALLOW_GOODS_SUBACCOUNTS" valueNumeric="1"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+
+    <insert tableName="ACCOUNT_TYPES">
+      <column name="ID" valueNumeric="3"/>
+      <column name="TYPE_CODE" value="LIABILITY"/>
+      <column name="TYPE_NAME" value="Liability Account"/>
+      <column name="DESCRIPTION" value="Liability and debt account"/>
+      <column name="ACCOUNT_GROUP" value="LIABILITY"/>
+      <column name="IS_INTERNAL" valueNumeric="1"/>
+      <column name="ALLOW_GOODS_SUBACCOUNTS" valueNumeric="0"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Party Types -->
+  <changeSet author="ledgerx" id="001-020-party-types">
+    <insert tableName="PARTY_TYPES">
+      <column name="ID" valueNumeric="1"/>
+      <column name="TYPE_CODE" value="INDIVIDUAL"/>
+      <column name="TYPE_NAME" value="Individual"/>
+      <column name="DESCRIPTION" value="Individual person"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+
+    <insert tableName="PARTY_TYPES">
+      <column name="ID" valueNumeric="2"/>
+      <column name="TYPE_CODE" value="CORPORATION"/>
+      <column name="TYPE_NAME" value="Corporation"/>
+      <column name="DESCRIPTION" value="Corporate entity"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Parties -->
+  <changeSet author="ledgerx" id="001-030-parties">
+    <insert tableName="PARTIES">
+      <column name="ID" valueNumeric="1"/>
+      <column name="EXTERNAL_ID" value="EXT001"/>
+      <column name="PARTY_TYPE_ID" valueNumeric="1"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+
+    <insert tableName="PARTIES">
+      <column name="ID" valueNumeric="2"/>
+      <column name="EXTERNAL_ID" value="EXT002"/>
+      <column name="PARTY_TYPE_ID" valueNumeric="2"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Plans -->
+  <changeSet author="ledgerx" id="001-040-plans">
+    <insert tableName="PLANS">
+      <column name="ID" valueNumeric="1"/>
+      <column name="PRODUCT_ID" valueNumeric="1"/>
+      <column name="PLAN_CODE" value="BASIC_PLAN"/>
+      <column name="PLAN_NAME" value="Basic Plan"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+
+    <insert tableName="PLANS">
+      <column name="ID" valueNumeric="2"/>
+      <column name="PRODUCT_ID" valueNumeric="2"/>
+      <column name="PLAN_CODE" value="PREMIUM_PLAN"/>
+      <column name="PLAN_NAME" value="Premium Plan"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Goods Groups -->
+  <changeSet author="ledgerx" id="001-050-goods-groups">
+    <insert tableName="GOODS_GROUPS">
+      <column name="ID" valueNumeric="1"/>
+      <column name="GROUP_CODE" value="ELECTRONICS"/>
+      <column name="GROUP_NAME" value="Electronics"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+
+    <insert tableName="GOODS_GROUPS">
+      <column name="ID" valueNumeric="2"/>
+      <column name="GROUP_CODE" value="CLOTHING"/>
+      <column name="GROUP_NAME" value="Clothing"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Goods -->
+  <changeSet author="ledgerx" id="001-060-goods">
+    <insert tableName="GOODS">
+      <column name="ID" valueNumeric="1"/>
+      <column name="GOODS_CODE" value="LAPTOP_001"/>
+      <column name="GOODS_NAME" value="Laptop Computer"/>
+      <column name="GOODS_GROUP_ID" valueNumeric="1"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+
+    <insert tableName="GOODS">
+      <column name="ID" valueNumeric="2"/>
+      <column name="GOODS_CODE" value="SHIRT_001"/>
+      <column name="GOODS_NAME" value="Cotton Shirt"/>
+      <column name="GOODS_GROUP_ID" valueNumeric="2"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Fees -->
+  <changeSet author="ledgerx" id="001-070-fees">
+    <insert tableName="FEES">
+      <column name="ID" valueNumeric="1"/>
+      <column name="FEE_NAME" value="Transaction Fee"/>
+      <column name="PERCENTAGE" valueNumeric="0.5"/>
+      <column name="FIXED_AMOUNT" valueNumeric="0"/>
+      <column name="MIN_AMOUNT" valueNumeric="1"/>
+      <column name="MAX_AMOUNT" valueNumeric="100"/>
+      <column name="TIER_DEFINITION" value="Standard transaction fee"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Document Templates -->
+  <changeSet author="ledgerx" id="001-080-document-templates">
+    <insert tableName="DOCUMENT_TEMPLATES">
+      <column name="ID" valueNumeric="1"/>
+      <column name="TEMPLATE_CODE" value="INVOICE_TEMPLATE"/>
+      <column name="TEMPLATE_NAME" value="Invoice Template"/>
+      <column name="TEMPLATE_TYPE" value="INVOICE"/>
+      <column name="PARAMETRIC" valueNumeric="1"/>
+      <column name="TEMPLATE_DEFINITION" value="Standard invoice template"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+  <!-- Seed Event Types -->
+  <changeSet author="ledgerx" id="001-090-event-types">
+    <insert tableName="EVENT_TYPES">
+      <column name="ID" valueNumeric="1"/>
+      <column name="SUBSYSTEM" value="PAYMENT"/>
+      <column name="EVENT_GROUP" value="TRANSACTION"/>
+      <column name="EVENT_SUBGROUP" value="CASH"/>
+      <column name="EVENT_CODE" value="CASH_DEPOSIT"/>
+      <column name="EVENT_NAME" value="Cash Deposit"/>
+      <column name="FEE_ID" valueNumeric="1"/>
+      <column name="DOCUMENT_TEMPLATE_ID" valueNumeric="1"/>
+      <column name="STATUS" value="ACTIVE"/>
+      <column name="CREATED_AT" valueDate="CURRENT_TIMESTAMP"/>
+      <column name="CREATED_BY" value="system"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>

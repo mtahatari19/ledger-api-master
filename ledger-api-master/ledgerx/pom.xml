@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>ledgerx</artifactId>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <systemProperties>
+            <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+          </systemProperties>
+        </configuration>
+        <groupId>io.quarkus</groupId>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <artifactId>mapstruct-processor</artifactId>
+              <groupId>org.mapstruct</groupId>
+              <version>1.5.5.Final</version>
+            </path>
+          </annotationProcessorPaths>
+          <source>21</source>
+          <target>21</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+
+      <plugin>
+        <artifactId>liquibase-maven-plugin</artifactId>
+        <groupId>org.liquibase</groupId>
+      </plugin>
+
+      <!-- Jandex plugin to create index for Quarkus -->
+      <plugin>
+        <artifactId>jandex-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
+            <id>make-index</id>
+          </execution>
+        </executions>
+        <groupId>io.smallrye</groupId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- Core Module -->
+    <dependency>
+      <artifactId>core</artifactId>
+      <groupId>com.ledgerx</groupId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Quarkus Core -->
+    <dependency>
+      <artifactId>quarkus-arc</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-resteasy-reactive</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-hibernate-orm-panache</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-hibernate-validator</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-security</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>quarkus-oidc</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <!-- Database -->
+    <dependency>
+      <artifactId>quarkus-jdbc-h2</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <!-- Liquibase -->
+    <dependency>
+      <artifactId>quarkus-liquibase</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <!-- Jackson for JSON processing -->
+    <dependency>
+      <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+    <!-- YAML config support -->
+    <dependency>
+      <artifactId>quarkus-config-yaml</artifactId>
+      <groupId>io.quarkus</groupId>
+    </dependency>
+
+
+    <!-- MapStruct -->
+    <dependency>
+      <artifactId>mapstruct</artifactId>
+      <groupId>org.mapstruct</groupId>
+      <version>1.5.5.Final</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+
+    <!-- Test Dependencies -->
+    <dependency>
+      <artifactId>quarkus-junit5</artifactId>
+      <groupId>io.quarkus</groupId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <artifactId>rest-assured</artifactId>
+      <groupId>io.rest-assured</groupId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers -->
+    <dependency>
+      <artifactId>junit-jupiter</artifactId>
+      <groupId>org.testcontainers</groupId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <artifactId>oracle-xe</artifactId>
+      <groupId>org.testcontainers</groupId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <description>LedgerX Application</description>
+  <groupId>com.ledgerx</groupId>
+  <modelVersion>4.0.0</modelVersion>
+  <name>LedgerX</name>
+  <packaging>jar</packaging>
+
+  <parent>
+    <artifactId>leger-api</artifactId>
+    <groupId>com.ledgerx</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+
+  <profiles>
+    <profile>
+      <id>test</id>
+      <properties>
+        <quarkus.profile>test</quarkus.profile>
+      </properties>
+    </profile>
+  </profiles>
+
+  <properties>
+    <quarkus.version>3.6.0</quarkus.version>
+  </properties>
+
+  <version>1.0.0-SNAPSHOT</version>
+</project>
