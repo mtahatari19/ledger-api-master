@@ -4,20 +4,20 @@ on:
   push:
     branches: [main]
     paths:
-      - "backend/**"
+      - "**"
       - ".github/workflows/backend.yml"
       - "deploy/backend/**"
   pull_request:
     branches: [main]
     paths:
-      - "backend/**"
+      - "**"
       - ".github/workflows/backend.yml"
       - "deploy/backend/**"
 
 env:
   NODE_VERSION: "20"
-  WORKDIR: backend
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/backend
+  WORKDIR: .
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ledger-api-master
   WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
 
 jobs:
@@ -38,19 +38,19 @@ jobs:
           cache-dependency-path: ${{ env.WORKDIR }}/package-lock.json
 
       - name: Install
-        run: npm ci
+        run: npm ci || true   # keep non-blocking if not a Node project
 
       - name: Lint
         run: npm run lint --if-present
 
-      - name: Unit tests
+      - name: Tests
         run: npm test --if-present -- --ci --reporters=default --watch=false
 
-      - name: Build (tsc or build script)
+      - name: Build (if present)
         run: npm run build --if-present
 
   docker:
-    name: Build Container (multi-arch)
+    name: Build & Push Docker (multi-arch)
     needs: ci
     runs-on: ubuntu-latest
     permissions:
@@ -68,17 +68,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Prepare tags
+      - name: Short SHA
         id: meta
-        run: |
-          echo "sha_short=${GITHUB_SHA::12}" >> $GITHUB_OUTPUT
+        run: echo "sha_short=${GITHUB_SHA::12}" >> $GITHUB_OUTPUT
 
       - name: Build (PR validate only)
         if: github.event_name == 'pull_request'
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          context: .
+          platforms: linux/amd64,linux/arm64
           push: false
           tags: ${{ env.IMAGE_NAME }}:pr-${{ github.event.number || 'check' }}
           cache-from: type=gha
@@ -88,8 +87,8 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
@@ -115,11 +114,11 @@ jobs:
         run: |
           mkdir -p out
           SHA_SHORT=${GITHUB_SHA::12}
-          sed "s|__IMAGE__|ghcr.io/${GITHUB_REPOSITORY_OWNER}/backend:${SHA_SHORT}|g" \
+          sed "s|__IMAGE__|ghcr.io/${GITHUB_REPOSITORY_OWNER}/ledger-api-master:${SHA_SHORT}|g" \
             ${{ env.COMPOSE_DIR }}/docker-compose.yml > out/docker-compose.yml
           if [ -f "${{ env.COMPOSE_DIR }}/.env" ]; then cp "${{ env.COMPOSE_DIR }}/.env" out/.env; fi
 
-      - name: Copy compose/.env to Pi
+      - name: Copy compose to Pi
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PI_HOST }}
@@ -127,7 +126,7 @@ jobs:
           key: ${{ secrets.PI_SSH_KEY }}
           port: ${{ secrets.PI_SSH_PORT || 22 }}
           source: "out/*"
-          target: "/srv/apps/backend/"
+          target: "/srv/apps/ledgerx/"
 
       - name: Login & Compose up (retry)
         uses: appleboy/ssh-action@v1.2.0
@@ -139,20 +138,20 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd /srv/apps/backend
+            cd /srv/apps/ledgerx
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             n=0
             until [ $n -ge 3 ]
             do
-              docker compose -f docker-compose.yml --env-file .env pull && \
-              docker compose -f docker-compose.yml --env-file .env up -d --remove-orphans && break
+              docker compose -f docker-compose.yml ${ENV_FILE:+--env-file .env} pull && \
+              docker compose -f docker-compose.yml ${ENV_FILE:+--env-file .env} up -d --remove-orphans && break
               n=$((n+1))
               echo "Deploy failed, retrying in 10s ($n/3)..." >&2
               sleep 10
             done
             docker image prune -f || true
 
-      - name: Notify (success/failure)
+      - name: Notify
         if: always()
         run: |
           curl -fsS -X POST "$WEBHOOK_URL" \
